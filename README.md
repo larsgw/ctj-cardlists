@@ -1,2 +1,2 @@
 # ctj-cardlists
-Repositroy for topics with ctj-cardlists
+Repository for topics with ctj-cardlists
