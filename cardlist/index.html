@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Cardlist</title>
+    
+    <!-- Filter -->
+    <style>*{}</style>
+    
+    <!-- Fonts -->
+    <link href='https://fonts.googleapis.com/css?family=Roboto:400,700,300&subset=latin,greek,latin-ext' rel='stylesheet' type='text/css'>
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Mono:300,400,700&subset=latin,greek,latin-ext" rel="stylesheet">
+    
+    <!-- Main -->
+    <link href="../css/style.css" rel="stylesheet">
+  </head>
+  <body class="shadow-top">
+    
+    <main>
+      
+      <section id="articles" class="shadow-top s-list">
+	<header>Articles
+	  <nav class="sort">
+	    <span class="material-icons">arrow_drop_up</span>
+	    <span class="material-icons">arrow_drop_down</span>
+	  </nav>
+	</header>
+	<main></main>
+	<footer></footer>
+      </section>
+      
+      <section id="genus" class="shadow-top s-list">
+	<header>Genus
+	  <nav class="sort">
+	    <span class="material-icons">arrow_drop_up</span>
+	    <span class="material-icons">arrow_drop_down</span>
+	  </nav>
+	</header>
+	<main></main>
+	<footer></footer>
+      </section>
+      
+      <section id="species" class="shadow-top s-list">
+	<header>Species
+	  <nav class="sort">
+	    <span class="material-icons">arrow_drop_up</span>
+	    <span class="material-icons">arrow_drop_down</span>
+	  </nav>
+	</header>
+	<main></main>
+	<footer></footer>
+      </section>
+      
+    </main>
+    
+    <header>
+      <div id="backButton">
+	<span class="material-icons">arrow_back</span>
+      </div>
+      <div id="searchBar" tabindex="-1">
+	<span class="material-icons" tabindex="-1">search</span>
+	<input type="text" placeholder="Search for PMCID, genus or species"/>
+	<span class="material-icons" tabindex="-1">close</span>
+      </div>
+    </header>
+    
+    <div tabindex="-1" id="menuButton">
+      <span class="material-icons">menu</span>
+    </div>
+    
+    <aside>
+      <div tabindex="-1" id="closeButton">
+	<span class="material-icons">close</span>
+      </div>
+      <main id="menu"></main>
+    </aside>
+  
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script type="text/javascript" src="../js/script.js"></script>
+  </body>
+</html>
