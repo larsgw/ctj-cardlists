@@ -6,8 +6,8 @@ var publisherIcon = {
 }
 
 var articles = undefined
-  , genera   = 250
-  , binomial = 250
+  , genera   = undefined //250
+  , binomial = undefined //250
   
   , topic
   , getdata
@@ -30,7 +30,7 @@ function getHash () {
 
 function getURI () {
   var res   = {}
-    , param = window.location.href.split('?').pop().split('#')[0]
+    , param = window.location.href.split( '?' ).pop().split( '#' )[ 0 ]
     
       param = param ? param.split( '&' ) : []
     
@@ -74,7 +74,7 @@ function filter ( value, prop ) {
     .removeClass( 's-list' )
     .addClass( 's-item' )
   
-  stylesheets.filter.deleteRule( 0 )
+  /*stylesheets.filter.deleteRule( 0 )
   stylesheets.filter.insertRule( 
     'body > main > section > main > .card:not([data-' + prop + '~="' + value + '"]){' +
       'max-height:0;' +
@@ -82,8 +82,21 @@ function filter ( value, prop ) {
       'margin-bottom:0;' +
       'padding:0;' +
       'overflow:hidden;' +
+//       'display:block;' +
+    '}'
+  , 0 )*/
+  
+  stylesheets.filter.insertRule( 
+    'body > main > section > main > .card[data-' + prop + '~="' + value + '"]{' +
+      'display:block;' +
     '}'
   , 0 )
+  
+  stylesheets.filter.insertRule( 
+    'body > main > section > main > .card:not([data-' + prop + '~="' + value + '"]){' +
+      'display:none;' +
+    '}'
+  , 1 )
 }
 
 function clearFilter () {
@@ -95,8 +108,8 @@ function clearFilter () {
   .children( 'section' )
     .removeClass( 's-item' )
     .addClass( 's-list' )
+  stylesheets.filter.deleteRule( 1 )
   stylesheets.filter.deleteRule( 0 )
-  stylesheets.filter.insertRule( '*{}', 0 )
 }
 
 function functionGetData( data ) {
@@ -281,6 +294,16 @@ $(window).on('load',function(){
 	'<li><b>Creator:</b> ' + topic.creator.name +
 	  ( topic.creator.org ? ' (' + topic.creator.org + ')' : '' ) +
 	'</li>' +
+      '</ul>' +
+      '<h1>Other datasets</h1>' +
+      '<ul>' +
+	Object.keys( data ).map( function ( t ) {
+	  return (
+	    '<li><a href="?t=' + data[ t ].code + '#" data-code="' + data[ t ].code + '">' +
+	      data[ t ].title +
+	    '</a></li>'
+	  )
+	} ).join('') +
       '</ul>'
     )
     
