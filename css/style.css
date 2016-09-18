@@ -106,7 +106,7 @@ body > aside {
   transition: all .1s;
 }
 
-  #menuButton:focus ~ aside {
+  #menuButton.focus ~ aside {
     -webkit-transition: all .3s;
     -moz-transition: all .3s;
     -ms-transition: all .3s;
@@ -124,13 +124,12 @@ body > aside {
     z-index: 200;
   }
   
-    #menuButton:not(:focus) ~ aside #closeButton,
+    #menuButton:not(.focus) ~ aside #closeButton,
     #menuButton:focus { opacity: 0;pointer-events: none; }
     
-    #menuButton:focus,
     #closeButton:focus { outline: 0; }
     
-    #menuButton:focus ~ aside {
+    #menuButton.focus ~ aside {
       max-width: 300px;
     }
   
@@ -190,7 +189,7 @@ body > main {
   flex-flow:row wrap;
 }
 
-  #menuButton:focus ~ main {
+  #menuButton.focus ~ main {
     left:300px;
   }
   

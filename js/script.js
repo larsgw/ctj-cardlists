@@ -336,7 +336,10 @@ $(window).on('load',function(){
       filter(val,'genus')
   })
 
-  $('#backButton span').on('click',clearFilter)
+  $('#backButton').on('click',clearFilter)
+  
+  $( '#menuButton').on('focus',function(){$(this).addClass('focus')})
+  $('#closeButton').on('focus',function(){$('#menuButton').removeClass('focus')})
 
   $( 'body > main > section > header nav' ).click( function () {
     var parent = $( this ).parents( 'body > main > section' )

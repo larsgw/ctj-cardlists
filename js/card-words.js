@@ -3,12 +3,32 @@
  * 
  */
 
+
 // Include
-var fs      = require( 'fs'        )
+var program = require( 'commander' )
+  , fs      = require( 'fs'        )
 
 // Constants
-var  input = 'data/1/data.json'
-  , output = 'html/data/c05-c.json'
+var  input = ''
+  , output = ''
+
+function cleanDirectoryName ( directory ) {
+  return directory.replace( /\/$/, '' )
+}
+
+program
+  .version('0.0.1')
+  .usage ('[options]')
+  .option('-p, --project <path>',
+          'CProject folder',
+          cleanDirectoryName)
+  .parse(process.argv);
+
+if ( !process.argv.slice(2).length )
+  program.help();
+
+ input = program.project + '/data.json'
+output = '../data/' + program.project.replace(/\.\.\/data\/(.{3})\/data/,'$1') + '/words.json'
 
 // Get JSON
 var data    = JSON.parse( fs.readFileSync( input, 'utf8' ) )
