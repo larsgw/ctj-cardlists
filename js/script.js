@@ -86,12 +86,13 @@ function filter ( value, prop ) {
     '}'
   , 0 )*/
   
+  stylesheets.filter.deleteRule( 1 )
+  stylesheets.filter.deleteRule( 0 )
   stylesheets.filter.insertRule( 
     'body > main > section > main > .card[data-' + prop + '~="' + value + '"]{' +
       'display:block;' +
     '}'
   , 0 )
-  
   stylesheets.filter.insertRule( 
     'body > main > section > main > .card:not([data-' + prop + '~="' + value + '"]){' +
       'display:none;' +
@@ -110,6 +111,8 @@ function clearFilter () {
     .addClass( 's-list' )
   stylesheets.filter.deleteRule( 1 )
   stylesheets.filter.deleteRule( 0 )
+  stylesheets.filter.insertRule( '*{}' , 0 )
+  stylesheets.filter.insertRule( '*{}' , 1 )
 }
 
 function functionGetData( data ) {
