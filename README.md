@@ -9,17 +9,17 @@ To submit a topic, follow a few steps.
 
 1. Copy the repository locally
 2. Install the following pieces of software:
-  1. [getpapers]()
-  2. [norma]()
-  3. [ami]()
-  4. [nodejs]() and the packages: [commander](), [fs](), [xmldoc](), [progress]() and [colors]()
-3. Run [data/cmine.json]() with the following arguments:
+  1. [getpapers](https://github.com/ContentMine/getpapers)
+  2. [norma](https://github.com/ContentMine/norma)
+  3. [ami](https://github.com/ContentMine/ami)
+  4. [nodejs](https://nodejs.org) and the packages: [commander](https://www.npmjs.com/package/commander), [fs](https://nodejs.org/api/fs.html), [xmldoc](https://www.npmjs.com/package/xmldoc), [progress](https://www.npmjs.com/package/progress) and [colors](https://www.npmjs.com/package/colors)
+3. Run [data/cmine.sh](https://github.com/larsgw/ctj-cardlists/blob/master/data/cmine.sh) with the following arguments:
   * `-q`: Query. [Query documentation](https://github.com/ContentMine/workshop-resources/blob/master/software-tutorials/getpapers/getpapers-eupmc-queries.md)
   * `-l`: Number of articles. Something around 250-1000
-  * `-c`: Project code. Three-symbol non-taken code. To see taken codes, see [data/topics.json]()
-4. Now the data is present but unlisted. To list it, add an entry to [data/topics.json]() as in the examples
+  * `-c`: Project code. Three-symbol non-taken code. To see taken codes, see [data/topics.json](https://github.com/larsgw/ctj-cardlists/blob/master/data/topics.json)
+4. Now the data is present but unlisted. To list it, add an entry to [data/topics.json](https://github.com/larsgw/ctj-cardlists/blob/master/data/topics.json) as in the examples
 5. Create a pull request
-6. When accepted, the link to your dataset is https://larsgw.github.io/ctj-cardlists/cardlist?t=**YOUR_CODE**
+6. When accepted, the link to your dataset is `https://larsgw.github.io/ctj-cardlists/cardlist?t=YOUR_CODE`. When your project code is `co1` for example, your link is https://larsgw.github.io/ctj-cardlists/cardlist?t=co1
 
 ## License
 
