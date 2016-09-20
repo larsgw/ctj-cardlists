@@ -239,7 +239,16 @@ body > main {
 	width:100%;
 	height:auto;
       }
-    
+      
+      body > main > section.s-list > main > footer {
+	line-height:64px;
+	margin:0 1px 0 8px;
+	text-align: center;
+      }
+      
+      body > main > section.max > main > footer,
+      body > main > section.s-item > main > footer { display: none; }
+      
       body > main > section > main:after,
       body > main > section > main:before {
 	content:'';
@@ -252,7 +261,41 @@ body > main {
       display:none;
     }
 
-.card:nth-child(n+10) { display:none; }
+/* section[data-index=  "0"] .card:nth-of-type(-n -   1), */
+section[data-index=  "0"] .card:nth-of-type( n +  50),
+
+/* section[data-index= "50"] .card:nth-of-type(-n +  49), */
+section[data-index= "50"] .card:nth-of-type( n +  50),
+
+/* section[data-index="100"] .card:nth-of-type(-n -  99), */
+section[data-index="100"] .card:nth-of-type( n + 100),
+
+/* section[data-index="150"] .card:nth-of-type(-n - 149), */
+section[data-index="150"] .card:nth-of-type( n + 150),
+
+/* section[data-index="200"] .card:nth-of-type(-n - 199), */
+section[data-index="200"] .card:nth-of-type( n + 200),
+
+/* section[data-index="250"] .card:nth-of-type(-n - 249), */
+section[data-index="250"] .card:nth-of-type( n + 250),
+
+/* section[data-index="300"] .card:nth-of-type(-n - 299), */
+section[data-index="300"] .card:nth-of-type( n + 300),
+
+/* section[data-index="350"] .card:nth-of-type(-n - 349), */
+section[data-index="350"] .card:nth-of-type( n + 350),
+
+/* section[data-index="400"] .card:nth-of-type(-n - 399), */
+section[data-index="400"] .card:nth-of-type( n + 400),
+
+/* section[data-index="450"] .card:nth-of-type(-n - 449), */
+section[data-index="450"] .card:nth-of-type( n + 450),
+
+/* section[data-index="500"] .card:nth-of-type(-n - 499), */
+section[data-index="500"] .card:nth-of-type( n + 500),
+
+/* section[data-index="550"] .card:nth-of-type(-n - 549), */
+section[data-index="550"] .card:nth-of-type( n + 550) { display: none; }
 
 .card {
   color: rgba(0,0,0,.87);

@@ -118,7 +118,7 @@ function clearFilter () {
 function functionGetData( data ) {
   getdata = data;
   
-  $( '#articles > main' ).append( Object.keys( data.articles ).slice( 0, articles ).map( function ( v, i ) {
+  $( '#articles > main' ).prepend( Object.keys( data.articles ).slice( 0, articles ).map( function ( v, i ) {
     var article = data.articles[ v ]
       , footer  = $( '#articles > footer' )
     
@@ -168,7 +168,7 @@ function functionGetData( data ) {
     
   } ).join( '' ) )
   
-  $( '#genus > main' ).append( Object.keys( data.genus ).slice( 0, genera ).map( function ( genus, index ) {
+  $( '#genus > main' ).prepend( Object.keys( data.genus ).slice( 0, genera ).map( function ( genus, index ) {
     var genusData = data.genus[ genus ]
       , footer  = $( '#genus > footer' )
     
@@ -223,7 +223,7 @@ function functionGetData( data ) {
     
   } ).join( '' ) )
   
-  $( '#species > main' ).append( Object.keys( data.binomial ).slice( 0, binomial ).map( function ( species, index ) {
+  $( '#species > main' ).prepend( Object.keys( data.binomial ).slice( 0, binomial ).map( function ( species, index ) {
     var speciesData = data.binomial[ species ]
       , footer  = $( '#species > footer' )
     
@@ -313,10 +313,28 @@ $(window).on('load',function(){
   } )
 
   sections.children('main').scroll( function () {
-    var $this = $(this).parent();
+    var $this = $(this).parent()
+      , page  = 50
+      , child = this.childElementCount
+      , min   = 0
+      , max   = child - ( child % page )
+      , index = parseInt( $this.attr( 'data-index' ) )
+      , top   = index > min ? index - page : min
+      , bottom= index < max ? index + page : max
     
-    $this[ ( this.scrollTop < 5 ? 'add' : 'remove' ) + 'Class' ]('shadow-top')
-    $this[ ( this.scrollHeight - this.clientHeight - this.scrollTop < 5 ? 'add' : 'remove' ) + 'Class' ]('shadow-bottom')
+    if ( this.scrollTop < 5 ) {
+      $this.addClass( 'shadow-top' )
+      $this.attr( 'data-index', top )
+    } else {
+      $this.removeClass( 'shadow-top' )
+    }
+    
+    if ( this.scrollHeight - this.clientHeight - this.scrollTop < 5 ) {
+      $this.addClass( 'shadow-bottom' + ( index === max ? ' max' : '' ) )
+      $this.attr( 'data-index', bottom )
+    } else {
+      $this.removeClass( 'shadow-bottom' )
+    }
   } )
 
   $( 'body' ).children('main').scroll( function () {
