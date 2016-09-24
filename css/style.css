@@ -22,19 +22,22 @@ body > header {
 }
 
   #backButton,
+  #linkButton,
   #searchBar {
     color: white;
     height:100%;
   }
   
-  #backButton { float:left;margin-left:56px;padding:20px 8px 20px 16px;display:none; }
-  #searchBar { float:right;padding:17px 16px 17px 8px; }
+  #backButton { float: left;padding:20px  8px 20px 16px;margin-left:56px;display:none; }
+  #linkButton { float:right;padding:20px 16px 20px  8px; }
+  #searchBar  { float:right;padding:17px 16px 17px  8px; }
     
     body > main.s-details + header > #backButton { display:block; }
     
     #searchBar:focus { outline: 0; }
     
     #backButton > span,
+    #linkButton > span,
     #searchBar > span {
       -webkit-user-select:none;
       -moz-user-select:none;
@@ -247,7 +250,7 @@ body > main {
       }
       
       body > main > section.max > main > footer,
-      body > main > section.s-item > main > footer { display: none; }
+      body > main.s-details > section > main > footer { display: none; }
       
       body > main > section > main:after,
       body > main > section > main:before {

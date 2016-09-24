@@ -5,7 +5,8 @@
     "description": "The first example. Conifers are the target of this software, so an easy first choice to test it with.",
     "data": {
       "query": "'Abies OR Pinus OR Picea'",
-      "limit": 250
+      "limit": 250,
+      "columns": [ "a", "c", "b" ]
     },
     "creator": {
       "name": "Lars Willighagen",
@@ -18,7 +19,22 @@
     "description": "The second example. ContentMine does a lot with Zika, so why not prove this software can handle that too?",
     "data": {
       "query": "'ABSTRACT:zika OR ABSTRACT:dengue OR ABSTRACT:spondweni'",
-      "limit": 500
+      "limit": 500,
+      "columns": [ "a", "c", "b" ]
+    },
+    "creator": {
+      "name": "Lars Willighagen",
+      "org": "ContentMine"
+    }
+  },
+  "te1": {
+    "code": "te1",
+    "title": "Test 1",
+    "description": "Testing column configuration",
+    "data": {
+      "query": "Pinus",
+      "limit": 10,
+      "columns": [ "a", "c", "b", "w" ]
     },
     "creator": {
       "name": "Lars Willighagen",

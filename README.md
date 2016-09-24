@@ -16,7 +16,8 @@ To submit a topic, follow a few steps.
 3. Run [data/cmine.sh](https://github.com/larsgw/ctj-cardlists/blob/master/data/cmine.sh) with the following arguments:
   * `-q`: Query. [Query documentation](https://github.com/ContentMine/workshop-resources/blob/master/software-tutorials/getpapers/getpapers-eupmc-queries.md)
   * `-l`: Number of articles. Something around 250-1000
-  * `-c`: Project code. Three-symbol non-taken code. To see taken codes, see [data/topics.json](https://github.com/larsgw/ctj-cardlists/blob/master/data/topics.json)
+  * `-p`: Project code. Three-symbol non-taken code. To see taken codes, see [data/topics.json](https://github.com/larsgw/ctj-cardlists/blob/master/data/topics.json)
+  * `-c`: Columns. Comma seperated list. Possibilities: a (articles), c (genus), b (binomial)
 4. Now the data is present but unlisted. To list it, add an entry to [data/topics.json](https://github.com/larsgw/ctj-cardlists/blob/master/data/topics.json) as in the examples
 5. Create a pull request
 6. When accepted, the link to your dataset is `https://larsgw.github.io/ctj-cardlists/cardlist?t=YOUR_CODE`. When your project code is `co1` for example, your link is https://larsgw.github.io/ctj-cardlists/cardlist?t=co1

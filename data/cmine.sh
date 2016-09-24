@@ -5,8 +5,9 @@ OPTIND=1
 QUERY=""
 LIMIT=0
 CODE=""
+COLUMNS="c,b"
 
-while getopts "q:l:c:" opt; do
+while getopts "q:l:p:c:" opt; do
   case "$opt" in
   q)
     QUERY=$OPTARG
@@ -14,8 +15,11 @@ while getopts "q:l:c:" opt; do
   l)
     LIMIT=$OPTARG
     ;;
-  c)
+  p)
     CODE=$OPTARG
+    ;;
+  c)
+    COLUMNS=$OPTARG
     ;;
   esac
 done
@@ -25,7 +29,7 @@ shift $((OPTIND-1))
 [ "$1" = "--" ] && shift
 
 if [ -z "$QUERY" ] || [ -z "$LIMIT" ] || [ -z "$CODE" ]; then
-  echo "Please provide arguments -q (query), -l (article limit) and -c (project code)"
+  echo "Please provide arguments -q (query), -l (article limit), -p (project code) and -c (columns)"
   exit 1
 fi
 
@@ -41,12 +45,15 @@ norma --project $CODE/data -i fulltext.xml -o scholarly.html --transform nlm2htm
 ami2-species --project $CODE/data -i scholarly.html --sp.species --sp.type genus
 ami2-species --project $CODE/data -i scholarly.html --sp.species --sp.type binomial
 ami2-word --project $CODE/data --w.words wordFrequencies --w.stopwords stopwords.txt 
+
+# TODO: Add ami plugins
+
 ami2-sequence --project $CODE/data --filter file\(\*\*/results.xml\) -o sequencesfiles.xml
 
 echo "Converting to JSON:"
-node ../js/ctj.js -p ../data/$CODE/data -o ../data/$CODE/data -c genus,binomial
-node ../js/card.js -p ../data/$CODE/data
+node ../js/ctj.js -p ../data/$CODE/data -o ../data/$CODE/data -c $COLUMNS
+node ../js/card.js -p ../data/$CODE/data -c $COLUMNS
 node ../js/card-words.js -p ../data/$CODE/data
 
-echo "Removing unnecessary files:"
+echo "Removing unnecessary files..."
 rm -rf $CODE/data/

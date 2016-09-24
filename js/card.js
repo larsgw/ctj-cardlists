@@ -15,26 +15,50 @@ function cleanDirectoryName ( directory ) {
   return directory.replace( /\/$/, '' )
 }
 
+function getColumns ( columns ) {
+  var columnsDict= {
+    genus: 'genus',
+    binomial: 'binomial',
+    frequencies: 'frequencies',
+    
+    c: 'genus',
+    b: 'binomial',
+    w: 'frequencies'
+  }
+  return columns
+    .split( ',' )
+    .filter( function ( v ) { return columnsDict.hasOwnProperty( v ) } )
+    .map( function ( v ) { return columnsDict[ v ] } )
+}
+
 program
   .version('0.0.1')
   .usage ('[options]')
   .option('-p, --project <path>',
           'CProject folder',
           cleanDirectoryName)
+  .option('-c, --columns <items>',
+          'Columns',
+          getColumns)
   .parse(process.argv);
 
 if ( !process.argv.slice(2).length )
   program.help();
 
  input = program.project + '/data.json'
-output = '../data/' + program.project.replace(/\.\.\/data\/(.{3})\/data/,'$1') + '/words.json'
+output = '../data/' + program.project.replace(/\.\.\/data\/(.{3})\/data/,'$1') + '/data.json'
+
+console.log(  'Input file: ' +  input )
+console.log( 'Output file: ' + output )
+console.log( 'Columns: ' + program.columns.join( ', ' ) )
 
 // Get JSON
 var data    = JSON.parse( fs.readFileSync( input, 'utf8' ) )
   , out     = {
     articles: {},
     genus:    {},
-    binomial: {}
+    binomial: {},
+    frequencies: {}
   }
 
 // Convert JSON:
@@ -55,121 +79,257 @@ Object.keys( data.articles ).forEach( function ( article ) {
   }
 } )
 
-// - genus
-Object.keys( data.genus ).forEach( function ( genus ) {
-  var json = data.genus[ genus ]
-    , hits = []
+for ( var columnIndex = 0; columnIndex < program.columns.length; columnIndex++ ) {
+  var column = program.columns[ columnIndex ]
   
-  // Hits per article
-  json
-    .slice()
-    .map( function ( v ) {
-      return v.pmc
-    } )
-    .sort()
-    .forEach( function ( v ) {
-      var last = hits[ hits.length-1 ] || [];
-      if ( last[ 0 ] === v )
-	last[ 1 ]++
-      else hits.push( [ v, 1 ] )
-    } )
-  
-  hits = hits.sort( function ( a, b ) {
-    if ( a[ 1 ] !== b[ 1 ] )
-      return b[ 1 ] - a[ 1 ];
+  Object.keys( data[ column ] ).forEach( function ( jsonItem ) {
+    var json = data[ column ][ jsonItem ]
+      , hits = []
     
-    if ( a[ 0 ] < b[ 0 ] )
-      return -1;
+    // Hits per article
+    json
+      .slice()
+      .map( function ( v ) {
+	return v.pmc
+      } )
+      .sort()
+      .forEach( function ( v ) {
+	var last = hits[ hits.length-1 ] || [];
+	if ( last[ 0 ] === v )
+	  last[ 1 ]++
+	else hits.push( [ v, 1 ] )
+      } )
+    
+    hits = hits.sort( function ( a, b ) {
+      if ( a[ 1 ] !== b[ 1 ] )
+	return b[ 1 ] - a[ 1 ];
       
-    if ( a[ 0 ] > b[ 0 ] )
-      return  1;
+      if ( a[ 0 ] < b[ 0 ] )
+	return -1;
+	
+      if ( a[ 0 ] > b[ 0 ] )
+	return  1;
+      
+      return 0;
+    } )
     
-    return 0;
+    // Total hits
+    var total = hits
+      .slice()
+      .reduce( function( a, b ) {
+	return [ , a[ 1 ] + b[ 1 ] ]
+      } )[ 1 ]
+    
+    out[ column ][ jsonItem ] = {
+      total: total,
+      hits : hits
+    }
+    
+    switch ( column ) {
+      case 'binomial':
+	
+	var genus = jsonItem.split( ' ' )[0]
+	
+	if ( out.genus.hasOwnProperty( genus ) )
+	  out.genus[ genus ].species.push( jsonItem )
+	
+	break;
+      
+      case 'genus':
+	
+	out[ column ][ jsonItem ].species = []
+	
+	break;
+    }
+  })
+}
+
+/*
+// - genus
+if ( program.columns.indexOf( 'genus' ) > -1 ) {
+  Object.keys( data.genus ).forEach( function ( genus ) {
+    var json = data.genus[ genus ]
+      , hits = []
+    
+    // Hits per article
+    json
+      .slice()
+      .map( function ( v ) {
+	return v.pmc
+      } )
+      .sort()
+      .forEach( function ( v ) {
+	var last = hits[ hits.length-1 ] || [];
+	if ( last[ 0 ] === v )
+	  last[ 1 ]++
+	else hits.push( [ v, 1 ] )
+      } )
+    
+    hits = hits.sort( function ( a, b ) {
+      if ( a[ 1 ] !== b[ 1 ] )
+	return b[ 1 ] - a[ 1 ];
+      
+      if ( a[ 0 ] < b[ 0 ] )
+	return -1;
+	
+      if ( a[ 0 ] > b[ 0 ] )
+	return  1;
+      
+      return 0;
+    } )
+    
+    // Total hits
+    var total = hits
+      .slice()
+      .reduce( function( a, b ) {
+	return [ , a[ 1 ] + b[ 1 ] ]
+      } )[ 1 ]
+    
+    out.genus[ genus ] = {
+      total: total,
+      hits : hits ,
+      species: []
+    }
   } )
-  
-  // Total hits
-  var total = hits
-    .slice()
-    .reduce( function( a, b ) {
-      return [ , a[ 1 ] + b[ 1 ] ]
-    } )[ 1 ]
-  
-  out.genus[ genus ] = {
-    total: total,
-    hits : hits ,
-    species: []
-  }
-} )
+}
 
 // - binomial
-Object.keys( data.binomial ).forEach( function ( species ) {
-  var json = data.binomial[ species ]
-    , genus= species.split( ' ' )[0]
-    , hits = []
-  
-  // Genus
-  if ( out.genus.hasOwnProperty( genus ) )
-    out.genus[ genus ].species.push( species )
-  
-  // Hits per article
-  json
-    .slice()
-    .map( function ( v ) {
-      return v.pmc
-    } )
-    .sort()
-    .forEach( function ( v ) {
-      var last = hits[ hits.length-1 ] || [];
-      if ( last[ 0 ] === v )
-	last[ 1 ]++
-      else hits.push( [ v, 1 ] )
-    } )
-  
-  hits = hits.sort( function ( a, b ) {
-    if ( a[ 1 ] !== b[ 1 ] )
-      return b[ 1 ] - a[ 1 ];
+if ( program.columns.indexOf( 'binomial' ) > -1 ) {
+  Object.keys( data.binomial ).forEach( function ( species ) {
+    var json = data.binomial[ species ]
+      , genus= species.split( ' ' )[0]
+      , hits = []
     
-    if ( a[ 0 ] < b[ 0 ] )
-      return -1;
+    // Genus
+    if ( out.genus.hasOwnProperty( genus ) )
+      out.genus[ genus ].species.push( species )
+    
+    // Hits per article
+    json
+      .slice()
+      .map( function ( v ) {
+	return v.pmc
+      } )
+      .sort()
+      .forEach( function ( v ) {
+	var last = hits[ hits.length-1 ] || [];
+	if ( last[ 0 ] === v )
+	  last[ 1 ]++
+	else hits.push( [ v, 1 ] )
+      } )
+    
+    hits = hits.sort( function ( a, b ) {
+      if ( a[ 1 ] !== b[ 1 ] )
+	return b[ 1 ] - a[ 1 ];
       
-    if ( a[ 0 ] > b[ 0 ] )
-      return  1;
+      if ( a[ 0 ] < b[ 0 ] )
+	return -1;
+	
+      if ( a[ 0 ] > b[ 0 ] )
+	return  1;
+      
+      return 0;
+    } )
     
-    return 0;
+    // Total hits
+    var total = hits
+      .slice()
+      .reduce( function( a, b ) {
+	return [ , a[ 1 ] + b[ 1 ] ]
+      } )[ 1 ]
+    
+    out.binomial[ species ] = {
+      total: total,
+      hits : hits
+    }
   } )
-  
-  // Total hits
-  var total = hits
-    .slice()
-    .reduce( function( a, b ) {
-      return [ , a[ 1 ] + b[ 1 ] ]
-    } )[ 1 ]
-  
-  out.binomial[ species ] = {
-    total: total,
-    hits : hits
-  }
-} )
+}
+
+// - frequencies
+if ( program.columns.indexOf( 'frequencies' ) > -1 ) {
+  Object.keys( data.frequencies ).forEach( function ( frequency ) {
+    var json = data.frequencies[ frequency ]
+      , hits = []
+    
+    // Hits per article
+    json
+      .slice()
+      .map( function ( v ) {
+	return v.pmc
+      } )
+      .sort()
+      .forEach( function ( v ) {
+	var last = hits[ hits.length-1 ] || [];
+	if ( last[ 0 ] === v )
+	  last[ 1 ]++
+	else hits.push( [ v, 1 ] )
+      } )
+    
+    hits = hits.sort( function ( a, b ) {
+      if ( a[ 1 ] !== b[ 1 ] )
+	return b[ 1 ] - a[ 1 ];
+      
+      if ( a[ 0 ] < b[ 0 ] )
+	return -1;
+	
+      if ( a[ 0 ] > b[ 0 ] )
+	return  1;
+      
+      return 0;
+    } )
+    
+    // Total hits
+    var total = hits
+      .slice()
+      .reduce( function( a, b ) {
+	return [ , a[ 1 ] + b[ 1 ] ]
+      } )[ 1 ]
+    
+    out.frequencies[ frequency ] = {
+      total: total,
+      hits : hits
+    }
+  } )
+}
+*/
 
 // Sorting
-var genusKeys = Object.keys( out.genus )
-  , binomialKeys = Object.keys( out.binomial )
+var genusKeys    = Object.keys( out.genus       || {} )
+  , binomialKeys = Object.keys( out.binomial    || {} )
+  , wordKeys     = Object.keys( out.frequencies || {} )
 
-genusKeys.forEach( function ( v ) {
-  out.genus[ v ].species = out.genus[ v ].species.sort()
-} )
+if ( genusKeys.length ) {
+  genusKeys.forEach( function ( v ) {
+    out.genus[ v ].species = out.genus[ v ].species.sort()
+  } )
 
-genusKeys.sort( function ( b, a ) {
-  return ( out.genus[ a ].total - out.genus[ b ].total )
-} ).forEach( function ( v, i ) {
-  out.genus[ v ].order = i;
-} )
+  genusKeys.sort( function ( b, a ) {
+    return ( out.genus[ a ].total - out.genus[ b ].total )
+  } ).forEach( function ( v, i ) {
+    out.genus[ v ].order = i;
+  } )
+}
 
-binomialKeys.sort( function ( b, a ) {
-  return ( out.binomial[ a ].total - out.binomial[ b ].total )
-} ).forEach( function ( v, i ) {
-  out.binomial[ v ].order = i;
-} )
+if ( binomialKeys.length ) {
+  binomialKeys.sort( function ( b, a ) {
+    return ( out.binomial[ a ].total - out.binomial[ b ].total )
+  } ).forEach( function ( v, i ) {
+    out.binomial[ v ].order = i;
+  } )
+}
+
+if ( wordKeys.length ) {
+  wordKeys.sort( function ( b, a ) {
+    return ( out.frequencies[ a ].total - out.frequencies[ b ].total )
+  } ).forEach( function ( v, i ) {
+    out.frequencies[ v ].order = i;
+  } )
+}
+
+
+/*Object.keys(out).forEach(function(v){
+  console.log(Object.keys(out[v]).slice(0,20))
+})*/
 
 // Saving file
-fs.writeFileSync( output, JSON.stringify( out ) )
+fs.writeFileSync( output, JSON.stringify( out,null,2 ) )

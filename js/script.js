@@ -11,7 +11,7 @@ var articles = undefined
   
   , topic
   , getdata
-  , sections
+  , sections = $([])
   , uri = getURI()
   , hash = getHash()
 
@@ -20,10 +20,13 @@ var stylesheets = {
 }
 
 function getHash () {
-  var res = {}
-    , param = decodeURIComponent( window.location.hash.replace( /^#/, '' ) )
+  var param = decodeURIComponent( window.location.hash.replace( /^#/, '' ) )
+    , parts = param.split( '=' )
     
-  res[ param.split( '=' )[ 0 ] ] = param.split( '=' )[ 1 ];
+  res = {
+    key: parts[ 0 ],
+    val: parts[ 1 ]
+  }
   
   return res
 }
@@ -41,17 +44,25 @@ function getURI () {
   return res
 }
 
+function getShortLink () {
+  var hash = '#' + uri.t + uri.c.split( ',' ).join( '' ) + window.location.hash
+    , link = window.location.href.replace( /\/cardlist.*$/, '' )
+  
+  window.prompt( 'Use this link:', link + hash )
+  
+  return ( link + hash )
+}
+
 function checkHash () {
-  hash = getHash ()
+      hash = getHash()
+  var type =
+    Object
+      .keys( columnsDict )
+      .map( function ( v ) { return columnsDict[ v ] } )
+      .filter( function ( v, i, a ) { return a.indexOf( v ) === i } )
   
-  if ( hash.articles )
-    filter( hash.articles, 'articles' )
-  
-  else if ( hash.genus )
-    filter( hash.genus, 'genus' )
-  
-  else if ( hash.species )
-    filter( hash.species, 'species' )
+  if ( type.indexOf( hash.key ) > -1 )
+    filter( hash.val, hash.key )
   
   else
     $( 'body' ).addClass( 'shadow-top shadow-bottom' )
@@ -74,27 +85,15 @@ function filter ( value, prop ) {
     .removeClass( 's-list' )
     .addClass( 's-item' )
   
-  /*stylesheets.filter.deleteRule( 0 )
-  stylesheets.filter.insertRule( 
-    'body > main > section > main > .card:not([data-' + prop + '~="' + value + '"]){' +
-      'max-height:0;' +
-      'margin-top:0;' +
-      'margin-bottom:0;' +
-      'padding:0;' +
-      'overflow:hidden;' +
-//       'display:block;' +
-    '}'
-  , 0 )*/
-  
   stylesheets.filter.deleteRule( 1 )
   stylesheets.filter.deleteRule( 0 )
   stylesheets.filter.insertRule( 
-    'body > main > section > main > .card[data-' + prop + '~="' + value + '"]{' +
+    'main.s-details section .card[data-' + prop + '~="' + value + '"]{' +
       'display:block;' +
     '}'
   , 0 )
   stylesheets.filter.insertRule( 
-    'body > main > section > main > .card:not([data-' + prop + '~="' + value + '"]){' +
+    'main.s-details section .card:not([data-' + prop + '~="' + value + '"]){' +
       'display:none;' +
     '}'
   , 1 )
@@ -115,178 +114,285 @@ function clearFilter () {
   stylesheets.filter.insertRule( '*{}' , 1 )
 }
 
-function functionGetData( data ) {
-  getdata = data;
+var columnsDict = {
+  articles: 'articles',
+  genus: 'genus',
+  binomial: 'species',
+  species: 'species',
+  frequencies: 'frequencies',
   
-  $( '#articles > main' ).prepend( Object.keys( data.articles ).slice( 0, articles ).map( function ( v, i ) {
-    var article = data.articles[ v ]
-      , footer  = $( '#articles > footer' )
-    
-    if ( i < articles )
-      footer.html( i + '/' + articles )
-    else
-      footer.empty()
-    
-    return (
-      '<div class="card" tabindex="-1" '+
-	'data-articles="' + v + '"' +
-	'data-genus="' + article.genera.join( ' ' ) + '"' +
-	'data-species="' + article.species.map( function ( v ) { return v.replace( ' ', '_' ) } ).join( ' ' ) + '"' +
-      '>' +
-	'<header>' +
-	  '<h1><a href="#articles=' + v + '">' + article.title + '</a></h1>' +
-	'</header>' +
-	'<aside>' +
-	  '<section>' +
-	    '<p>' +
-	      [
-		'<span>' + article.authors + '</span>' ,
-		'<span><a href="https://doi.org/' + article.doi + '">' + article.doi + '</a></span>' ,
-		'<span>' + article.journal + '</span>'
-	      ].join( '' ) +
-	    '</p>' +
-	  '</section>' +
-	  '<section class="hide">' +
-	    '<p style="cursor:pointer;margin:8px 0 16px 0;" class="anchor" onclick="' +
-	      'var $self=$(this),iframe=this' +
-		'.parentNode' +
-		'.insertBefore(document.createElement(\'iframe\'),this);' +
-	      'iframe.setAttribute(\'src\',' +
-		'\'wordcloud.html?file=..%2Fdata%2f' + topic.code + '%2Fwords.json&pmcid=' + v +
-	      '\');' +
-	      'iframe.style.marginBottom=\'16px\';'+
-	      '$self.remove();' +
-	    '">' + 'Click to load Word Cloud' + '</p>' +
-	    '<p>Word Cloud created with <a href="https://www.jasondavies.com/wordcloud/">cloud.js</a> (<a href="https://github.com/jasondavies/d3-cloud">repo</a>, <a href="https://github.com/jasondavies/d3-cloud/blob/master/LICENSE">license</a>)</p>' +
-	  '</section>' +
-	'</aside>' +
-// 	  '<img src="' + publisherIcon[ article.journal ] + '">' +
-	'<main>' +
-	  article.abstract +
-	'</main>'+
-      '</div>' )
-    
-  } ).join( '' ) )
-  
-  $( '#genus > main' ).prepend( Object.keys( data.genus ).slice( 0, genera ).map( function ( genus, index ) {
-    var genusData = data.genus[ genus ]
-      , footer  = $( '#genus > footer' )
-    
-    if ( index < genera )
-      footer.html( index + '/' + genera )
-    else
-      footer.empty()
-    
-    return (
-      '<div class="card" tabindex="-1" style="order:' + genusData.order + ';" ' +
-	'data-articles="' + genusData.hits.map( function(v){ return v[ 0 ] } ).join( ' ' ) + '"' +
-	'data-genus="' + genus + '"' +
-	'data-species="' + genusData.species.map( function ( v ) { return v.replace( ' ', '_' ) } ).join( ' ' ) + '"' +
-      '>' +
-	'<header>' +
-	  '<h1>' +
-	    '<span class="title"><a href="#genus=' + genus + '">' + genus + '</a></span>' +
-	    '<span class="total">' + genusData.total + '</span>' +
-	  '</h1>' +
-	'</header>' +
-	'<aside>' +
-	  '<section>' +
-	    '<ul>' +
-	      genusData.species.map( function ( v, i, a ) {
-		var str = '<li><a href="#species=' + v.replace( ' ', '_' ) + '">' + v + '</a></li>'
-		
-		if ( ( a.length > 10 ) && ( i === 8 ) )
-		  str += (
-		    '<li class="read-more" onclick="' +
-		      'this.parentNode.className+=\'open\';' +
-		      'this.remove();' +
-		    '">Click for more species</li>'
-		  )
-		
-		return str
-	      } ).join( ' ' ) +
-	    '</ul>' +
-	  '</section>' +
-	'</aside>' +
-	'<main>' +
-	  '<ul>' +
-	    genusData.hits.map( function ( v ) {
-	      return (
-		'<li>' +
-		  '<span class="pmcid"><a href="#articles=' + v[ 0 ] + '">' + v[ 0 ] + '</a></span>' +
-		  '<span class="count">' + v[ 1 ] + '</span>' +
-		'</li>' )
-	    } ).join( '' ) +
-	  '</ul>' +
-	'</main>' +
-      '</div>' )
-    
-  } ).join( '' ) )
-  
-  $( '#species > main' ).prepend( Object.keys( data.binomial ).slice( 0, binomial ).map( function ( species, index ) {
-    var speciesData = data.binomial[ species ]
-      , footer  = $( '#species > footer' )
-    
-    if ( index < binomial )
-      footer.html( index + '/' + binomial )
-    else
-      footer.empty()
-    
-    return (
-      '<div class="card" tabindex="-1" style="order:' + speciesData.order + ';" ' +
-	'data-articles="' + speciesData.hits.map( function ( v ) { return v[ 0 ] } ).join( ' ' ) + '"' +
-	'data-genus="' + species.split( ' ' )[0] + '"' +
-	'data-species="' + species.replace( ' ', '_' ) + '"' +
-      '>' +
-	'<header>' +
-	  '<h1>' +
-	    '<span class="title"><a href="#species=' + species.replace( ' ', '_' ) + '">' + species + '</a></span>' +
-	    '<span class="total">' + speciesData.total + '</span>' +
-	  '</h1>' +
-	'</header>' +
-	'<aside>' +
-	  '<section>' +
-	    '<ul>' +
-	    '</ul>' +
-	  '</section>' +
-	'</aside>' +
-	'<main>' +
-	  '<ul>' +
-	    speciesData.hits.map( function ( v ) {
-	      return (
-		'<li>' +
-		  '<span class="pmcid"><a href="#articles=' + v[ 0 ] + '">' + v[ 0 ] + '</a></span>' +
-		  '<span class="count">' + v[ 1 ] + '</span>' +
-		'</li>' )
-	    } ).join( '' ) +
-	  '</ul>' +
-	'</main>' +
-	'<footer>' +
-	  '<a href="#genus=' + species.split( ' ' )[ 0 ] + '">' + species.split( ' ' )[ 0 ] + '</a>' +
-	'</footer>' +
-      '</div>' )
-    
-  } ).join( '' ) )
-  
-  $( '.card a' ).click( function () {
-    setTimeout( checkHash, 100 )
-  } )
-  
+  a: 'articles',
+  c: 'genus',
+  b: 'species',
+  w: 'frequencies'
 }
 
-$(document).ready(function(){
-  sections = $( 'body > main > section' )
-  
-  checkHash()
-})
+var propDict = {
+  articles: 'articles',
+  genus: 'genus',
+  species: 'binomial',
+  frequencies: 'frequencies'  
+}
+
+function functionGetData( columns ) {
+  return function ( data ) {
+    getdata = data;
+    
+    columns.forEach( function ( column ) {
+      
+      var $elm   = $( '#target' ).clone()
+        , column = columnsDict[ column ]
+        , json   = data[ propDict[ column ] ]
+        , html   = ''
+      
+      $elm.attr( 'id', column )
+      $elm.attr( 'class', 'shadow-top s-list' )
+      $elm.children( 'header' ).children( 'span' ).text( column )
+      
+      if ( json !== null && typeof json === 'object' ) Object.keys( json ).forEach( function ( key, index, array ) {
+	
+	var value   = json[ key ]
+	  , $footer = $elm.children( 'footer' )
+	
+	$footer.html( index + '/' + array.length )
+	
+	switch ( column ) {
+	  case 'articles':
+	    
+	    html += (
+	      '<div class="card" tabindex="-1" '+
+		'data-articles="' + key + '"' +
+		'data-genus="' + value.genera.join( ' ' ) + '"' +
+		'data-species="' + value.species.map( function ( v ) { return v.replace( ' ', '_' ) } ).join( ' ' ) + '"' +
+	      '>' +
+		'<header>' +
+		  '<h1><a href="#articles=' + key + '">' + value.title + '</a></h1>' +
+		'</header>' +
+		'<aside>' +
+		  '<section>' +
+		    '<p>' +
+		      [
+			'<span>' + value.authors + '</span>' ,
+			'<span><a href="https://doi.org/' + value.doi + '">' + value.doi + '</a></span>' ,
+			'<span>' + value.journal + '</span>'
+		      ].join( '' ) +
+		    '</p>' +
+		  '</section>' +
+		  '<section class="hide">' +
+		    '<p style="cursor:pointer;margin:8px 0 16px 0;" class="anchor" onclick="' +
+		      'var $self=$(this),iframe=this' +
+			'.parentNode' +
+			'.insertBefore(document.createElement(\'iframe\'),this);' +
+		      'iframe.setAttribute(\'src\',\'' +
+			'wordcloud.html?file=..%2Fdata%2f' + topic.code + '%2Fwords.json&pmcid=' + key +
+		      '\');' +
+		      'iframe.style.marginBottom=\'16px\';'+
+		      '$self.remove();' +
+		    '">' + 'Click to load Word Cloud' + '</p>' +
+		    '<p>Word Cloud created with <a href="https://www.jasondavies.com/wordcloud/">cloud.js</a> (<a href="https://github.com/jasondavies/d3-cloud">repo</a>, <a href="https://github.com/jasondavies/d3-cloud/blob/master/LICENSE">license</a>)</p>' +
+		  '</section>' +
+		'</aside>' +
+	// 	  '<img src="' + publisherIcon[ value.journal ] + '">' +
+		'<main>' +
+		  value.abstract +
+		'</main>'+
+	      '</div>'
+	    )
+	    
+	    break;
+	    
+	  case 'species':
+	    
+	    html += (
+	      '<div class="card" tabindex="-1" style="order:' + value.order + ';" ' +
+		'data-articles="' + value.hits.map( function ( v ) { return v[ 0 ] } ).join( ' ' ) + '"' +
+		'data-genus="' + key.split( ' ' )[ 0 ] + '"' +
+		'data-species="' + key.replace( ' ', '_' ) + '"' +
+	      '>' +
+		'<header>' +
+		  '<h1>' +
+		    '<span class="title"><a href="#species=' + key.replace( ' ', '_' ) + '">' + key + '</a></span>' +
+		    '<span class="total">' + value.total + '</span>' +
+		  '</h1>' +
+		'</header>' +
+		'<aside>' +
+		  '<section>' +
+		    '<ul>' +
+		    '</ul>' +
+		  '</section>' +
+		'</aside>' +
+		'<main>' +
+		  '<ul>' +
+		    value.hits.map( function ( v ) {
+		      return (
+			'<li>' +
+			  '<span class="pmcid"><a href="#articles=' + v[ 0 ] + '">' + v[ 0 ] + '</a></span>' +
+			  '<span class="count">' + v[ 1 ] + '</span>' +
+			'</li>' )
+		    } ).join( '' ) +
+		  '</ul>' +
+		'</main>' +
+		'<footer>' +
+		  '<a href="#genus=' + key.split( ' ' )[ 0 ] + '">' + key.split( ' ' )[ 0 ] + '</a>' +
+		'</footer>' +
+	      '</div>'
+	    )
+	    
+	    break;
+	    
+	  case 'genus':
+	    
+	    html += (
+	      '<div class="card" tabindex="-1" style="order:' + value.order + ';" ' +
+		'data-articles="' + value.hits.map( function(v){ return v[ 0 ] } ).join( ' ' ) + '"' +
+		'data-genus="' + key + '"' +
+		'data-species="' + value.species.map( function ( v ) { return v.replace( ' ', '_' ) } ).join( ' ' ) + '"' +
+	      '>' +
+		'<header>' +
+		  '<h1>' +
+		    '<span class="title"><a href="#genus=' + key + '">' + key + '</a></span>' +
+		    '<span class="total">' + value.total + '</span>' +
+		  '</h1>' +
+		'</header>' +
+		'<aside>' +
+		  '<section>' +
+		    '<ul>' +
+		      value.species.map( function ( v, i, a ) {
+			var str = '<li><a href="#species=' + v.replace( ' ', '_' ) + '">' + v + '</a></li>'
+			
+			if ( ( a.length > 10 ) && ( i === 8 ) )
+			  str += (
+			    '<li class="read-more" onclick="' +
+			      'this.parentNode.className+=\'open\';' +
+			      'this.remove();' +
+			    '">Click for more species</li>'
+			  )
+			
+			return str
+		      } ).join( ' ' ) +
+		    '</ul>' +
+		  '</section>' +
+		'</aside>' +
+		'<main>' +
+		  '<ul>' +
+		    value.hits.map( function ( v ) {
+		      return (
+			'<li>' +
+			  '<span class="pmcid"><a href="#articles=' + v[ 0 ] + '">' + v[ 0 ] + '</a></span>' +
+			  '<span class="count">' + v[ 1 ] + '</span>' +
+			'</li>' )
+		    } ).join( '' ) +
+		  '</ul>' +
+		'</main>' +
+	      '</div>'
+	    )
+	    
+	    break;
+	    
+	  case 'frequencies':
+	    
+	    html += (
+	      '<div class="card" tabindex="-1" style="order:' + value.order + ';" ' +
+		'data-articles="' + value.hits.map( function ( v ) { return v[ 0 ] } ).join( ' ' ) + '"' +
+	      '>' +
+		'<header>' +
+		  '<h1>' +
+		    '<span class="title"><a href="#frequencies=' + encodeURIComponent( key ) + '">' + key + '</a></span>' +
+		    '<span class="total">' + value.total + '</span>' +
+		  '</h1>' +
+		'</header>' +
+		'<aside>' +
+		  '<section>' +
+		    '<ul>' +
+		    '</ul>' +
+		  '</section>' +
+		'</aside>' +
+		'<main>' +
+		  '<ul>' +
+		    value.hits.map( function ( v ) {
+		      return (
+			'<li>' +
+			  '<span class="pmcid"><a href="#articles=' + v[ 0 ] + '">' + v[ 0 ] + '</a></span>' +
+			  '<span class="count">' + v[ 1 ] + '</span>' +
+			'</li>' )
+		    } ).join( '' ) +
+		  '</ul>' +
+		'</main>' +
+	      '</div>'
+	    )
+	    
+	    break;
+	}
+	
+      })
+      
+      $elm.children( 'main' ).prepend( html )
+      
+      $( 'body > main' ).append( $elm )
+      
+      sections.add( $elm )
+      
+    } )
+    
+    $( '#target' ).remove();
+    
+    $( '.card a' ).click( function () {
+      setTimeout( checkHash, 100 )
+    } )
+    
+    $( 'body > main > section > header nav' ).click( function () {
+      var parent = $( this ).parents( 'body > main > section' )
+	, column = parent.hasClass( 'column' )
+	, columnr = parent.hasClass( 'column-reverse' )
+      
+      parent.removeClass( 'column column-reverse' )
+      
+      if ( column )
+	parent.addClass( 'column-reverse' )
+      else if ( !columnr )
+	parent.addClass( 'column' )
+    })
+    
+    sections.children('main').scroll( function () {
+      var $this = $(this).parent()
+	, page  = 50
+	, child = this.childElementCount
+	, min   = 0
+	, max   = child - ( child % page )
+	, index = parseInt( $this.attr( 'data-index' ) )
+	, top   = index > min ? index - page : min
+	, bottom= index < max ? index + page : max
+      
+      if ( this.scrollTop < 5 ) {
+	$this.addClass( 'shadow-top' )
+	$this.attr( 'data-index', top )
+      } else {
+	$this.removeClass( 'shadow-top' )
+      }
+      
+      if ( this.scrollHeight - this.clientHeight - this.scrollTop < 5 ) {
+	$this.addClass( 'shadow-bottom' + ( index === max ? ' max' : '' ) )
+	$this.attr( 'data-index', bottom )
+      } else {
+	$this.removeClass( 'shadow-bottom' )
+      }
+    } )
+    
+    checkHash()
+  }
+}
 
 $(window).on('load',function(){
   
   $.get( '../data/topics.json', function ( data ) {
     
-    topic = uri.t ? data[ uri.t ] : data[ Object.keys( data )[0] ]
+        topic  =   uri.t ? data[ uri.t ] : data[ Object.keys( data )[0] ]
+    var columns= ( uri.c || 'a,c,b' )
+		   .split( ',' )
+		   .filter( function ( v ) { return topic.data.columns.indexOf( v ) > -1 } )
+		   .slice( 0, 3 )
     
-    $.get( '../data/' + topic.code + '/data.json', functionGetData)
+    $.getJSON( '../data/' + topic.code + '/data.json', functionGetData( columns ) )
     
     $('#menu').prepend(
       '<h1 data-code="' + topic.code + '">' + topic.title + '</h1>' +
@@ -294,6 +400,7 @@ $(window).on('load',function(){
       '<ul>' +
 	'<li><b>Query:</b> ' + topic.data.query + '</li>' +
 	'<li><b>Limit:</b> ' + topic.data.limit + '</li>' +
+	'<li><b>Columns:</b> ' + topic.data.columns + '</li>' +
 	'<li><b>Creator:</b> ' + topic.creator.name +
 	  ( topic.creator.org ? ' (' + topic.creator.org + ')' : '' ) +
 	'</li>' +
@@ -310,31 +417,6 @@ $(window).on('load',function(){
       '</ul>'
     )
     
-  } )
-
-  sections.children('main').scroll( function () {
-    var $this = $(this).parent()
-      , page  = 50
-      , child = this.childElementCount
-      , min   = 0
-      , max   = child - ( child % page )
-      , index = parseInt( $this.attr( 'data-index' ) )
-      , top   = index > min ? index - page : min
-      , bottom= index < max ? index + page : max
-    
-    if ( this.scrollTop < 5 ) {
-      $this.addClass( 'shadow-top' )
-      $this.attr( 'data-index', top )
-    } else {
-      $this.removeClass( 'shadow-top' )
-    }
-    
-    if ( this.scrollHeight - this.clientHeight - this.scrollTop < 5 ) {
-      $this.addClass( 'shadow-bottom' + ( index === max ? ' max' : '' ) )
-      $this.attr( 'data-index', bottom )
-    } else {
-      $this.removeClass( 'shadow-bottom' )
-    }
   } )
 
   $( 'body' ).children('main').scroll( function () {
@@ -358,21 +440,9 @@ $(window).on('load',function(){
   })
 
   $('#backButton').on('click',clearFilter)
+  $('#linkButton').on('click',getShortLink)
   
   $( '#menuButton').on('focus',function(){$(this).addClass('focus')})
   $('#closeButton').on('focus',function(){$('#menuButton').removeClass('focus')})
-
-  $( 'body > main > section > header nav' ).click( function () {
-    var parent = $( this ).parents( 'body > main > section' )
-      , column = parent.hasClass( 'column' )
-      , columnr = parent.hasClass( 'column-reverse' )
-    
-    parent.removeClass( 'column column-reverse' )
-    
-    if ( column )
-      parent.addClass( 'column-reverse' )
-    else if ( !columnr )
-      parent.addClass( 'column' )
-  })
   
 });
