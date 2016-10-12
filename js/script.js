@@ -45,7 +45,10 @@ function getURI () {
 }
 
 function getShortLink () {
-  var hash = '#' + uri.t + uri.c.split( ',' ).join( '' ) + window.location.hash
+  var uriTopic   = uri.t || ''
+    , uriColumns = uri.c || ''
+  
+    , hash = '#' + uriTopic + uriColumns.split( ',' ).join( '' ) + window.location.hash
     , link = window.location.href.replace( /\/cardlist.*$/, '' )
   
   window.prompt( 'Use this link:', link + hash )
@@ -114,25 +117,8 @@ function clearFilter () {
   stylesheets.filter.insertRule( '*{}' , 1 )
 }
 
-var columnsDict = {
-  articles: 'articles',
-  genus: 'genus',
-  binomial: 'species',
-  species: 'species',
-  frequencies: 'frequencies',
-  
-  a: 'articles',
-  c: 'genus',
-  b: 'species',
-  w: 'frequencies'
-}
-
-var propDict = {
-  articles: 'articles',
-  genus: 'genus',
-  species: 'binomial',
-  frequencies: 'frequencies'  
-}
+var columnsDict
+  , propDict
 
 function functionGetData( columns ) {
   return function ( data ) {
@@ -382,41 +368,50 @@ function functionGetData( columns ) {
   }
 }
 
+function functionGetTopics ( data ) {
+    
+      topic  =   uri.t ? data[ uri.t ] : data[ Object.keys( data )[0] ]
+  var columns= ( uri.c || 'a,c,b' )
+		  .split( ',' )
+		  .filter( function ( v ) { return topic.data.columns.indexOf( v ) > -1 } )
+		  .slice( 0, 3 )
+  
+  $.getJSON( '../data/' + topic.code + '/data.json', functionGetData( columns ) )
+  
+  $('#menu').prepend(
+    '<h1 data-code="' + topic.code + '">' + topic.title + '</h1>' +
+      '<p>' + topic.description + '</p>' +
+    '<ul>' +
+      '<li><b>Query:</b> ' + topic.data.query + '</li>' +
+      '<li><b>Limit:</b> ' + topic.data.limit + '</li>' +
+      '<li><b>Columns:</b> ' + topic.data.columns + '</li>' +
+      '<li><b>Creator:</b> ' + topic.creator.name +
+	( topic.creator.org ? ' (' + topic.creator.org + ')' : '' ) +
+      '</li>' +
+    '</ul>' +
+    '<hr />' +
+    '<h1>Other datasets</h1>' +
+    '<ul>' +
+      Object.keys( data ).map( function ( t ) {
+	return (
+	  '<li><a href="?t=' + data[ t ].code + '#" data-code="' + data[ t ].code + '">' +
+	    data[ t ].title +
+	  '</a></li>'
+	)
+      } ).join('') +
+    '</ul>' +
+    '<p><a href="https://github.com/larsgw/ctj-cardlists#submitting-a-topic">Add your own topics</a></p>'
+  )
+  
+}
+
 $(window).on('load',function(){
   
-  $.get( '../data/topics.json', function ( data ) {
+  $.get( '../js/dict.json', function ( data ) {
+    propDict    = data.propDict   ,
+    columnsDict = data.columnsDict
     
-        topic  =   uri.t ? data[ uri.t ] : data[ Object.keys( data )[0] ]
-    var columns= ( uri.c || 'a,c,b' )
-		   .split( ',' )
-		   .filter( function ( v ) { return topic.data.columns.indexOf( v ) > -1 } )
-		   .slice( 0, 3 )
-    
-    $.getJSON( '../data/' + topic.code + '/data.json', functionGetData( columns ) )
-    
-    $('#menu').prepend(
-      '<h1 data-code="' + topic.code + '">' + topic.title + '</h1>' +
-	'<p>' + topic.description + '</p>' +
-      '<ul>' +
-	'<li><b>Query:</b> ' + topic.data.query + '</li>' +
-	'<li><b>Limit:</b> ' + topic.data.limit + '</li>' +
-	'<li><b>Columns:</b> ' + topic.data.columns + '</li>' +
-	'<li><b>Creator:</b> ' + topic.creator.name +
-	  ( topic.creator.org ? ' (' + topic.creator.org + ')' : '' ) +
-	'</li>' +
-      '</ul>' +
-      '<h1>Other datasets</h1>' +
-      '<ul>' +
-	Object.keys( data ).map( function ( t ) {
-	  return (
-	    '<li><a href="?t=' + data[ t ].code + '#" data-code="' + data[ t ].code + '">' +
-	      data[ t ].title +
-	    '</a></li>'
-	  )
-	} ).join('') +
-      '</ul>'
-    )
-    
+    $.get( '../data/topics.json', functionGetTopics )
   } )
 
   $( 'body' ).children('main').scroll( function () {

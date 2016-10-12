@@ -26,19 +26,5 @@
       "name": "Lars Willighagen",
       "org": "ContentMine"
     }
-  },
-  "te1": {
-    "code": "te1",
-    "title": "Test 1",
-    "description": "Testing column configuration",
-    "data": {
-      "query": "Pinus",
-      "limit": 10,
-      "columns": [ "a", "c", "b", "w" ]
-    },
-    "creator": {
-      "name": "Lars Willighagen",
-      "org": "ContentMine"
-    }
   }
 }

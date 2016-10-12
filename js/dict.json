@@ -1,0 +1,33 @@
+{
+  "columnsDict": {
+    "articles": "articles",
+    "genus": "genus",
+    "binomial": "species",
+    "species": "species",
+    "frequencies": "frequencies",
+
+    "a": "articles",
+    "c": "genus",
+    "b": "species",
+    "w": "frequencies"
+  },
+  "propDict": {
+    "articles": "articles",
+    "genus": "genus",
+    "species": "binomial",
+    "frequencies": "frequencies"
+  },
+  "nodeDict": {
+    "genus": "genus",
+    "binomial": "binomial",
+    "frequencies": "frequencies",
+    "wordGenus": "wordGenus",
+    
+    "c": "genus",
+    "b": "binomial",
+    "w": "frequencies",
+    "p": "wordGenus",
+    
+    "wc": "wordGenus"
+  }
+}

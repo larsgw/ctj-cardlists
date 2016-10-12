@@ -16,23 +16,17 @@ function cleanDirectoryName ( directory ) {
 }
 
 function getColumns ( columns ) {
-  var columnsDict= {
-    genus: 'genus',
-    binomial: 'binomial',
-    frequencies: 'frequencies',
-    
-    c: 'genus',
-    b: 'binomial',
-    w: 'frequencies'
-  }
+  var dicts       = JSON.parse( fs.readFileSync( '../js/dict.json', 'utf8' ) )
+    , nodeDict    = dicts.nodeDict
+  
   return columns
     .split( ',' )
-    .filter( function ( v ) { return columnsDict.hasOwnProperty( v ) } )
-    .map( function ( v ) { return columnsDict[ v ] } )
+    .filter( function ( v ) { return nodeDict.hasOwnProperty( v ) } )
+    .map( function ( v ) { return nodeDict[ v ] } )
 }
 
 program
-  .version('0.0.1')
+  .version('0.1.1')
   .usage ('[options]')
   .option('-p, --project <path>',
           'CProject folder',
@@ -50,14 +44,14 @@ output = '../data/' + program.project.replace(/\.\.\/data\/(.{3})\/data/,'$1') +
 
 console.log(  'Input file: ' +  input )
 console.log( 'Output file: ' + output )
-console.log( 'Columns: ' + program.columns.join( ', ' ) )
+console.log(     'Columns: ' + program.columns.join( ', ' ) )
 
 // Get JSON
 var data    = JSON.parse( fs.readFileSync( input, 'utf8' ) )
   , out     = {
-    articles: {},
-    genus:    {},
-    binomial: {},
+    articles   : {},
+    genus      : {},
+    binomial   : {},
     frequencies: {}
   }
 
@@ -82,9 +76,12 @@ Object.keys( data.articles ).forEach( function ( article ) {
 for ( var columnIndex = 0; columnIndex < program.columns.length; columnIndex++ ) {
   var column = program.columns[ columnIndex ]
   
-  Object.keys( data[ column ] ).forEach( function ( jsonItem ) {
-    var json = data[ column ][ jsonItem ]
-      , hits = []
+  if (
+    data.hasOwnProperty( column )
+  ) Object.keys( data[ column ] ).forEach( function ( jsonItem ) {
+    var json  =  data[ column ][ jsonItem ]
+      , hits  = []
+      , total = json.length
     
     // Hits per article
     json
@@ -99,31 +96,6 @@ for ( var columnIndex = 0; columnIndex < program.columns.length; columnIndex++ )
 	  last[ 1 ]++
 	else hits.push( [ v, 1 ] )
       } )
-    
-    hits = hits.sort( function ( a, b ) {
-      if ( a[ 1 ] !== b[ 1 ] )
-	return b[ 1 ] - a[ 1 ];
-      
-      if ( a[ 0 ] < b[ 0 ] )
-	return -1;
-	
-      if ( a[ 0 ] > b[ 0 ] )
-	return  1;
-      
-      return 0;
-    } )
-    
-    // Total hits
-    var total = hits
-      .slice()
-      .reduce( function( a, b ) {
-	return [ , a[ 1 ] + b[ 1 ] ]
-      } )[ 1 ]
-    
-    out[ column ][ jsonItem ] = {
-      total: total,
-      hits : hits
-    }
     
     switch ( column ) {
       case 'binomial':
@@ -140,158 +112,40 @@ for ( var columnIndex = 0; columnIndex < program.columns.length; columnIndex++ )
 	out[ column ][ jsonItem ].species = []
 	
 	break;
+      
+      case 'frequencies':
+	
+	hits = []
+	
+	json
+	  .slice()
+	  .map( function ( v ) {
+	    return [ v.pmc, parseInt( v.count ) ]
+	  } )
+	  .sort()
+	  .forEach( function ( v ) {
+	    var last = hits[ hits.length-1 ] || [];
+	    if ( last[ 0 ] === v[ 0 ] )
+	      last[ 1 ] += v[ 1 ]
+	    else hits.push( v )
+	  } )
+	
+	break;
+    }
+    
+    hits = hits.sort( function ( a, b ) {
+      if ( a[ 1 ] !== b[ 1 ] ) return b[ 1 ] - a[ 1 ];
+      if ( a[ 0 ]  <  b[ 0 ] ) return -1;
+      if ( a[ 0 ]  >  b[ 0 ] ) return  1;
+			       return  0;
+    } )
+    
+    out[ column ][ jsonItem ] = {
+      total: total,
+      hits : hits
     }
   })
 }
-
-/*
-// - genus
-if ( program.columns.indexOf( 'genus' ) > -1 ) {
-  Object.keys( data.genus ).forEach( function ( genus ) {
-    var json = data.genus[ genus ]
-      , hits = []
-    
-    // Hits per article
-    json
-      .slice()
-      .map( function ( v ) {
-	return v.pmc
-      } )
-      .sort()
-      .forEach( function ( v ) {
-	var last = hits[ hits.length-1 ] || [];
-	if ( last[ 0 ] === v )
-	  last[ 1 ]++
-	else hits.push( [ v, 1 ] )
-      } )
-    
-    hits = hits.sort( function ( a, b ) {
-      if ( a[ 1 ] !== b[ 1 ] )
-	return b[ 1 ] - a[ 1 ];
-      
-      if ( a[ 0 ] < b[ 0 ] )
-	return -1;
-	
-      if ( a[ 0 ] > b[ 0 ] )
-	return  1;
-      
-      return 0;
-    } )
-    
-    // Total hits
-    var total = hits
-      .slice()
-      .reduce( function( a, b ) {
-	return [ , a[ 1 ] + b[ 1 ] ]
-      } )[ 1 ]
-    
-    out.genus[ genus ] = {
-      total: total,
-      hits : hits ,
-      species: []
-    }
-  } )
-}
-
-// - binomial
-if ( program.columns.indexOf( 'binomial' ) > -1 ) {
-  Object.keys( data.binomial ).forEach( function ( species ) {
-    var json = data.binomial[ species ]
-      , genus= species.split( ' ' )[0]
-      , hits = []
-    
-    // Genus
-    if ( out.genus.hasOwnProperty( genus ) )
-      out.genus[ genus ].species.push( species )
-    
-    // Hits per article
-    json
-      .slice()
-      .map( function ( v ) {
-	return v.pmc
-      } )
-      .sort()
-      .forEach( function ( v ) {
-	var last = hits[ hits.length-1 ] || [];
-	if ( last[ 0 ] === v )
-	  last[ 1 ]++
-	else hits.push( [ v, 1 ] )
-      } )
-    
-    hits = hits.sort( function ( a, b ) {
-      if ( a[ 1 ] !== b[ 1 ] )
-	return b[ 1 ] - a[ 1 ];
-      
-      if ( a[ 0 ] < b[ 0 ] )
-	return -1;
-	
-      if ( a[ 0 ] > b[ 0 ] )
-	return  1;
-      
-      return 0;
-    } )
-    
-    // Total hits
-    var total = hits
-      .slice()
-      .reduce( function( a, b ) {
-	return [ , a[ 1 ] + b[ 1 ] ]
-      } )[ 1 ]
-    
-    out.binomial[ species ] = {
-      total: total,
-      hits : hits
-    }
-  } )
-}
-
-// - frequencies
-if ( program.columns.indexOf( 'frequencies' ) > -1 ) {
-  Object.keys( data.frequencies ).forEach( function ( frequency ) {
-    var json = data.frequencies[ frequency ]
-      , hits = []
-    
-    // Hits per article
-    json
-      .slice()
-      .map( function ( v ) {
-	return v.pmc
-      } )
-      .sort()
-      .forEach( function ( v ) {
-	var last = hits[ hits.length-1 ] || [];
-	if ( last[ 0 ] === v )
-	  last[ 1 ]++
-	else hits.push( [ v, 1 ] )
-      } )
-    
-    hits = hits.sort( function ( a, b ) {
-      if ( a[ 1 ] !== b[ 1 ] )
-	return b[ 1 ] - a[ 1 ];
-      
-      if ( a[ 0 ] < b[ 0 ] )
-	return -1;
-	
-      if ( a[ 0 ] > b[ 0 ] )
-	return  1;
-      
-      return 0;
-    } )
-    
-    // Total hits
-    var total = hits
-      .slice()
-      .reduce( function( a, b ) {
-	return [ , a[ 1 ] + b[ 1 ] ]
-      } )[ 1 ]
-    
-    out.frequencies[ frequency ] = {
-      total: total,
-      hits : hits
-    }
-  } )
-}
-*/
 
 // Sorting
 var genusKeys    = Object.keys( out.genus       || {} )
@@ -325,11 +179,6 @@ if ( wordKeys.length ) {
     out.frequencies[ v ].order = i;
   } )
 }
-
-
-/*Object.keys(out).forEach(function(v){
-  console.log(Object.keys(out[v]).slice(0,20))
-})*/
 
 // Saving file
 fs.writeFileSync( output, JSON.stringify( out,null,2 ) )

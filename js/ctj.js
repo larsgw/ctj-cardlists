@@ -30,19 +30,13 @@ if (!String.prototype.repeat) {
 }
 
 function getColumns ( columns ) {
-  var columnsDict= {
-    genus: 'genus',
-    binomial: 'binomial',
-    frequencies: 'frequencies',
-    
-    c: 'genus',
-    b: 'binomial',
-    w: 'frequencies'
-  }
+  var dicts       = JSON.parse( fs.readFileSync( '../js/dict.json', 'utf8' ) )
+    , nodeDict    = dicts.nodeDict
+  
   return columns
     .split( ',' )
-    .filter( function ( v ) { return columnsDict.hasOwnProperty( v ) } )
-    .map( function ( v ) { return columnsDict[ v ] } )
+    .filter( function ( v ) { return nodeDict.hasOwnProperty( v ) } )
+    .map( function ( v ) { return nodeDict[ v ] } )
 }
 
 function cleanDirectoryName ( directory ) {

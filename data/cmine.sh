@@ -56,4 +56,4 @@ node ../js/card.js -p ../data/$CODE/data -c $COLUMNS
 node ../js/card-words.js -p ../data/$CODE/data
 
 echo "Removing unnecessary files..."
-rm -rf $CODE/data/
+# rm -rf $CODE/data/
